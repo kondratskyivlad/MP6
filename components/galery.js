@@ -16,16 +16,18 @@ const styles = StyleSheet.create({
     }
 })
 
-const Gallery = ({ gallery, width, height}) => {
+const Gallery = ({ gallery, width, height, color}) => {
 
     const normalImageSize = {
         width: width,
-        height: height
+        height: height,
+        backgroundColor: color,
     }
 
     const doubledImageSize = {
         width: width * 2,
         height: height * 2,
+        backgroundColor: color,
     };
 
     const onPressImage = () => {

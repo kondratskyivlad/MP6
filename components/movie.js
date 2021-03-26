@@ -1,12 +1,12 @@
 import React from 'react';
-import {StyleSheet, View, Dimensions,
+import {
+    StyleSheet, View, Dimensions,
     Image, Text,
     ScrollView,
-    TouchableNativeFeedback
+    LogBox, TouchableNativeFeedback,
 } from 'react-native';
 import MoviesList from '../MoviesList.json'
-import {Card} from 'react-native-elements'
-import { getImage } from '../constants/data'
+import { Card } from 'react-native-elements'
 import Icon from 'react-native-vector-icons/FontAwesome'
 import { Appbar} from 'react-native-paper';
 import SearchBar from "react-native-dynamic-search-bar";
@@ -55,6 +55,12 @@ const portrait_styles = StyleSheet.create({
         borderRadius: 20,
         marginBottom: 10,
     },
+    emptyView: {
+        flex: 1,
+        alignItems: "center",
+        justifyContent: "center",
+        height: "100%",
+    },
 });
 
 const landscape_styles = StyleSheet.create({
@@ -100,6 +106,12 @@ const landscape_styles = StyleSheet.create({
         width: 150,
         marginBottom: 10,
     },
+    emptyView: {
+        flex: 1,
+        alignItems: "center",
+        justifyContent: "center",
+        height: '100%',
+    },
 });
 
 const orientation = () => {
@@ -123,18 +135,6 @@ const MyTheme = {
     },
 };
 
-// imageContainerStyle={
-//     image.idx === 0 ?
-//         {
-//             width: dim.width / 4,
-//             height: dim.height / 6.5,
-//         } :
-//         {
-//             width: dim.width / 4,
-//             height: dim.height / 6.5,
-//         }
-// }
-
 let data = [];
 
 MoviesList.Search.map((item, i) => (
@@ -143,23 +143,21 @@ MoviesList.Search.map((item, i) => (
 
 function Movie({navigation}){
 
-    const [movieData, setMovieData] = React.useState(data)
-    const [term, setTerm] = React.useState('')
-
+    const [movieData, setMovieData] = React.useState([])
+    // const [term, setTerm] = React.useState('')
 
     const filteredItems = (items, term) => {
         if(term.length === 0) {
-            return items
+            return null
         }
         if(term.trim().length === 0) {
-           return items
+            return null
         }
         return items.filter((item) => {
             if(
                 item.Title
                     .replace(/[^a-zA-Z ]/g, "")
                     .toLowerCase()
-                    // .replace(/,/g, '')
                     .indexOf(term)> -1 ||
                 item.Year
                     .replace(/[^a-zA-Z ]/g, "")
@@ -175,7 +173,26 @@ function Movie({navigation}){
             }
         })
     }
-    const visibleItems = filteredItems(movieData, term)
+
+    LogBox.ignoreAllLogs();
+
+    const currentFilteredItems = async (text) => {
+
+        const validText = text
+                .toLowerCase()
+                .replace(/[^a-zA-Z ]/g, "")
+                .replace(/\s+/g, ' ')
+                .trim()
+                .replace(/,/g, '')
+        if( validText.length <= 2) {
+            return null
+        } else {
+            let url = `http://www.omdbapi.com/?apikey=2965961d&s=${validText}&page=1`
+            const fetchResult = await fetch(url);
+            const loadedData = await fetchResult.json();
+            setMovieData([...filteredItems(movieData, validText), ...loadedData.Search])
+        }
+    }
 
     const goHome = () => {
         navigation.navigate('Home');
@@ -187,7 +204,6 @@ function Movie({navigation}){
         setMovieData(newData)
     };
 
-
     return (
         <ScrollView>
             <View>
@@ -196,13 +212,8 @@ function Movie({navigation}){
                     <SearchBar
                         placeholder="Search here"
                         onChangeText={(text) =>
-                            setTerm(
-                                text.toLowerCase()
-                                    .replace(/[^a-zA-Z ]/g, "")
-                                    .replace(/\s+/g, ' ')
-                                    .trim()
-                                    .replace(/,/g, '')
-                            )}
+                            currentFilteredItems(text)
+                        }
                         style={{flex: 1}}
                     />
                     <Appbar.Action
@@ -218,17 +229,14 @@ function Movie({navigation}){
             </View>
             <View style={orientation().MainContainer}>
                 {
-                    visibleItems.map((item, index) => {
+                    movieData.map((item, index) => {
                         return(
                             <TouchableNativeFeedback
                                 style={orientation().CardContainer}
                                 key={index}
                                 onPress={() => {
-                                    navigation.navigate('Details');
                                     navigation.navigate('Details', {
-                                        Title: item.Title,
-                                        Poster: item.Poster,
-                                        Type: item.Type,
+                                        Id: item.imdbID,
                                     });
                                 }}
                             >
@@ -265,7 +273,9 @@ function Movie({navigation}){
                                         <Image
                                             resizeMode="cover"
                                             source={
-                                                getImage(item.Poster)
+                                                item.Poster === 'N/A' ?
+                                                require('../assets/nothing.jpg') :
+                                                    { uri: item.Poster }
                                             }
                                             style={orientation().img}
                                         />
@@ -276,7 +286,7 @@ function Movie({navigation}){
                                             <Text style={orientation().description}>{
                                                 item.Year === '' ?
                                                     ', year unknown' :
-                                                    ' from ' + item.Year
+                                                    ' from ' + (item.Year).toString()
                                             }</Text>
                                         </View>
                                     </View>

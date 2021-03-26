@@ -53,7 +53,7 @@ const AddForm = ({navigation, route}) => {
             Year: year,
             imdbID: idForNewItem++,
             Type: type,
-            Poster: '',
+            Poster: 'N/A',
         }
 
         const newData = [...movieData, newItem]

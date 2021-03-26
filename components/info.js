@@ -1,8 +1,5 @@
-import React from 'react';
-import {StyleSheet, View, Dimensions,
-    Image, Text, ScrollView, TouchableHighlight} from 'react-native';
-import { getImage } from '../constants/data'
-import { getFullInfo } from '../constants/data'
+import React, { useEffect }from 'react';
+import { Dimensions, Image, ScrollView, StyleSheet, Text, TouchableHighlight, View } from 'react-native';
 
 const portrait_styles = StyleSheet.create({
     mainTopContainer: {
@@ -113,21 +110,37 @@ const orientation = () => {
 }
 
 const Info = ({route}) => {
-    const { Title } = route.params;
-    const { Poster } = route.params;
-    const { Type } = route.params;
 
-    let data = []
+    const [fullInfo, setFullInfo] = React.useState([])
+    const { Id } = route.params;
 
-    data.push(getFullInfo(Title))
+    useEffect(() => {
+        let cleanupFunction = false;
+        const fetchData = async () => {
+            try {
+                fetch(`http://www.omdbapi.com/?apikey=2965961d&i=${Id}`)
+                    .then(response => response.json() )
+                    .then(data => setFullInfo([data]) )
+
+                if(!cleanupFunction) {
+                    setFullInfo(['data']);
+                }
+            } catch (e) {
+                console.error(e.message)
+            }
+        };
+
+        fetchData();
+
+        return () => cleanupFunction = true;
+    }, []);
 
     return (
         <ScrollView>
             <View>
                 <View style={{ flex: 0, alignItems: 'center', justifyContent: 'center' }}>
                     {
-                        Type === 'test' ? <Text>This is test item</Text>:
-                            data.map((item, index) => {
+                        fullInfo.map((item, index) => {
                             return(
                                 <View key={index}>
                                     <View style={orientation().mainTopContainer}>
@@ -135,7 +148,9 @@ const Info = ({route}) => {
                                             <Image
                                                 resizeMode="cover"
                                                 source={
-                                                    getImage(Poster)
+                                                    item.Poster === 'N/A' ?
+                                                        require('../assets/Coming-Soon.png') :
+                                                        { uri: item.Poster }
                                                 }
                                                 style={orientation().img}
                                             />

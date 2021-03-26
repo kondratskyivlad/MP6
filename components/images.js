@@ -15,7 +15,6 @@ const portrait_styles = StyleSheet.create({
         display: "flex",
         flexWrap: "wrap",
         flexDirection: "row",
-        marginTop: 10,
     },
     galleryContainer: {
         flex: 1,
@@ -39,7 +38,7 @@ const landscape_styles = StyleSheet.create({
         display: "flex",
         flexWrap: "wrap",
         flexDirection: "row",
-        marginTop: 10,
+        // marginTop: 10,
     },
     galleryContainer: {
         flex: 1,
@@ -99,6 +98,17 @@ const Images = ({ navigation }) => {
         navigation.navigate('Home');
     }
 
+    useEffect(() => {
+        const url = `https://pixabay.com/api/?key=19193969-87191e5db266905fe8936d565&q=fun+party&image_type=photo&per_page=30`;
+
+        (async () => {
+            const fetchResult = await fetch(url);
+            const loadedData = await fetchResult.json();
+            const loadedDataURIs = loadedData['hits'].map((lD) => ({ uri: lD['largeImageURL'] }));
+            setGallery(loadedDataURIs);
+        })();
+    }, []);
+
     const pickImage = async () => {
         const pickedImage = await ImagePicker.launchImageLibraryAsync({
             mediaTypes: ImagePicker.MediaTypeOptions.Images,
@@ -136,8 +146,6 @@ const Images = ({ navigation }) => {
 
     const screenData = useScreenDimensions();
 
-    console.log(screenData);
-
     const galleryComponent = arraySubSplitter(gallery).map(
         image => (
             <Gallery
@@ -149,6 +157,9 @@ const Images = ({ navigation }) => {
                         screenData.height / 2.3 :
                         screenData.height / 6.5
                 }
+                color={{
+                    backgroundColor: '#000'
+                }}
             />
         )
     );
