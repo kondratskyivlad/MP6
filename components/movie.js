@@ -144,7 +144,7 @@ MoviesList.Search.map((item, i) => (
 function Movie({navigation}){
 
     const [movieData, setMovieData] = React.useState([])
-    // const [term, setTerm] = React.useState('')
+    const [term, setTerm] = React.useState('')
 
     const filteredItems = (items, term) => {
         if(term.length === 0) {
@@ -184,6 +184,9 @@ function Movie({navigation}){
                 .replace(/\s+/g, ' ')
                 .trim()
                 .replace(/,/g, '')
+
+        setTerm(validText)
+
         if( validText.length <= 2) {
             return null
         } else {
@@ -229,6 +232,20 @@ function Movie({navigation}){
             </View>
             <View style={orientation().MainContainer}>
                 {
+                    term.length <= 2 ?
+                        <View style={{
+                            height: Dimensions.get('screen').height / 1.2,
+                            flex:1,
+                            flexDirection:'row',
+                            alignItems:'center',
+                            justifyContent:'center'
+                        }}>
+                            <Text  style={{
+                                fontSize: 20,
+                            }}>
+                                No image here )
+                            </Text>
+                        </View> :
                     movieData.map((item, index) => {
                         return(
                             <TouchableNativeFeedback
